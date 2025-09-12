@@ -1,5 +1,5 @@
  import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
- import { Carro } from "./Carro"; 
+ import { Carro } from "./Carro"
 
 @Entity()
 export class Marca {
