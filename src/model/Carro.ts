@@ -4,7 +4,7 @@ import { Marca } from "./Marca";
 @Entity()
 export class Carro{
     @PrimaryGeneratedColumn()
-    id: number;
+    id: string;
 
     @Column()
     placa: string;

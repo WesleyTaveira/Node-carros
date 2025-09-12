@@ -5,20 +5,22 @@ import { Carro } from "src/model/Carro"
 const router = Router();
 
 
-let carros: Carro[] = [];
+let carros: Carro[] = []
 
 router.get("/carro", (req, res) => {
     return res.status(200).send("Olá mundo!")
 })
 
-                                                         
+
 router.post("/carro", (req, res) =>{
+    const {id, placa, ano, marca} = req.body
     const carro = req.body                      
     carro.id = uuidV4();
     carros.push(carro)
    
   res.status(201).json(carro)
 });
+
 
 
 router.get("/carro/:id", (req, res) => {
@@ -38,5 +40,5 @@ router.delete("/carro/:id", (req, res) => {
   const {placa, ano, marca }= req.body;
   const novoCarro = carros.filter(carro => carro.id !== id)
 }) 
-                                         
+
 export default { router } 
