@@ -26,12 +26,17 @@ router.post("/carro", (req, res) =>{
 router.get("/carro/:id", (req, res) => {
   const{ id } = req.params;
   const carro = carros.find(carro => carro.id === id)
+
+  if(!carro)
+     res.status(404).json({error: true, message: 'Carro não existente!'})
+  
+  res.status(404).json(carro)
 }) 
 
 
 router.put("/carro/:id", (req, res) => {
   const{ id } = req.params;
-  const {placa, ano, marca }= req.body;
+  const {placa, ano, marca } = req.body;
   const carro = carros.find(carro => carro.id === id)
 }) 
 
