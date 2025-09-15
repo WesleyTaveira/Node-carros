@@ -3,14 +3,14 @@
 
 @Entity()
 export class Marca {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn("uuid")
+    id!: string;
 
     @Column()
-    nome: string;
+    marcacarros!: string;
 
     @OneToMany(() => Carro, (carro) => carro.marca)
-    carro: Carro[];
+    carros!: Carro[];
 
     
 }

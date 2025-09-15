@@ -1,49 +1,78 @@
-import { Router } from "express"
-import {v4 as uuidV4} from 'uuid'
-import { Carro } from "src/model/Carro"
+import { Router } from "express";
+import {v4 as uuidV4} from "uuid";
+import { Carro } from "../model/Carro";
 
-const router = Router();
+const carRouter = Router();
 
 
 let carros: Carro[] = []
 
-router.get("/carro", (req, res) => {
-    return res.status(200).send("Olá mundo!")
+carRouter.get("/carro", (req, res) => {
+    return res.status(200).json(carros);
 })
 
 
-router.post("/carro", (req, res) =>{
-    const {id, placa, ano, marca} = req.body
-    const carro = req.body                      
-    carro.id = uuidV4();
-    carros.push(carro)
-   
-  res.status(201).json(carro)
+carRouter.post("/carro", (req, res) =>{
+    const { placa, ano, marca } = req.body;
+    const carroComMesmaPlaca = carros.find(carro => carro.placa === placa);
+
+    if (carroComMesmaPlaca) {
+        return res.status(409).json({ message: "Já existe um carro cadastrado com esta placa." });
+    }
+
+    const novoCarro: Carro = {
+        id: uuidV4(),
+        placa,
+        ano,
+        marca
+    };
+    
+    carros.push(novoCarro);
+    
+    return res.status(201).json(novoCarro);
 });
 
 
 
-router.get("/carro/:id", (req, res) => {
+carRouter.get("/carro/:id", (req, res) => {
   const{ id } = req.params;
   const carro = carros.find(carro => carro.id === id)
 
   if(!carro)
-     res.status(404).json({error: true, message: 'Carro não existente!'})
+     return res.status(404).json({error: true, message: 'Carro não existente!'})
   
-  res.status(404).json(carro)
+  return res.status(404).json(carro)
 }) 
 
 
-router.put("/carro/:id", (req, res) => {
+carRouter.put("/carro/:id", (req, res) => {
   const{ id } = req.params;
   const {placa, ano, marca } = req.body;
   const carro = carros.find(carro => carro.id === id)
-}) 
 
-router.delete("/carro/:id", (req, res) => {
+  if (!carro)
+    return res.status(404).json({ error: true, message: 'Carro não existente!'});
+
+  Object.assign(carro, {
+    placa,
+    ano,
+    marca,
+
+  })
+
+  return res.status(200).json(carro);
+}) 
+carRouter.delete("/carro/:id", (req, res) => {
   const{ id } = req.params;
-  const {placa, ano, marca }= req.body;
+  const carro = carros.find(carro => carro.id === id)
+
+  if (!carro)
+    return res.status(404).json({ error: true, message: 'Carro não existente!'})
+
   const novoCarro = carros.filter(carro => carro.id !== id)
+  carros = novoCarro;
+
+  return res.status(204).send();
 }) 
 
-export default { router } 
+export default carRouter; 
