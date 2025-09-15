@@ -3,17 +3,17 @@ import { Marca } from "./Marca";
 
 @Entity()
 export class Carro{
-    @PrimaryGeneratedColumn()
-    id: string;
+    @PrimaryGeneratedColumn("uuid")
+    id!: string;
 
     @Column()
-    placa: string;
+    placa!: string;
 
     @Column()
-    ano: number;
+    ano!: number;
 
-    @ManyToOne(() => Marca, (marca) => marca.carro)
-    marca: Marca;
+    @ManyToOne(() => Marca, (marca) => marca.carros)
+    marca!: Marca;
 
 
 
