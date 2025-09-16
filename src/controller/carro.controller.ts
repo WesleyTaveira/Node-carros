@@ -13,7 +13,7 @@ carRouter.get("/carro", (req, res) => {
 
 
 carRouter.post("/carro", (req, res) =>{
-    const { placa, ano, marca } = req.body;
+    const { placa, ano, modelo, marca } = req.body;
     const carroComMesmaPlaca = carros.find(carro => carro.placa === placa);
 
     if (carroComMesmaPlaca) {
@@ -24,6 +24,7 @@ carRouter.post("/carro", (req, res) =>{
         id: uuidV4(),
         placa,
         ano,
+        modelo,
         marca
     };
     

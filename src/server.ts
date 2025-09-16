@@ -21,7 +21,7 @@ app.listen(3333, () => {
 
 AppDataSource.initialize()
     .then(() => {
-        console.log("✅ Conexão com o banco de dados estabelecida com sucesso!");
+        console.log(" Conexão com o banco de dados estabelecida com sucesso!");
 
         const app = express();
         
@@ -39,9 +39,9 @@ AppDataSource.initialize()
         // Usa as rotas
         app.use(router);
 
-        const PORT = process.env.PORT || 3000;
+        const PORT = process.env.PORT || 3333;
         app.listen(PORT, () => {
-            console.log(` Servidor rodando na porta ${PORT}`);
+            console.log(`Servidor rodando na porta ${PORT}`);
         });
     })
-    .catch((error) => console.log(" Erro ao conectar com o banco de dados:", error));
+    .catch((error) => console.log("Erro ao conectar com o banco de dados:", error));
