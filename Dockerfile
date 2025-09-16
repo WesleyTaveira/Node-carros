@@ -2,7 +2,7 @@
 FROM node:18-alpine AS builder
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install --include=dev
+RUN npm install --include=dev && npm install -g typescript
 COPY . .
 RUN npm run build # Este comando deve compilar seu TS para JS na pasta /dist
 
