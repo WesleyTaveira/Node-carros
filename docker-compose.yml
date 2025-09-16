@@ -1,0 +1,34 @@
+version: '3.8' 
+
+services: 
+  
+  db: 
+    image: postgres:latest 
+    container_name: my-postgres 
+    restart: always 
+    environment: 
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=minhasenha
+      - POSTGRES_DB=postgres
+    ports: 
+      - "5433:5432"
+    volumes: 
+      - pgdata:/var/lib/postgresql/data
+  
+  app: 
+    build: . 
+    container_name: meu_app
+    restart: always
+    ports:
+      - "3333:3333" 
+    environment: 
+      - DB_HOST=db
+      - DB_PORT=5433
+      - DB_USER=postgres
+      - DB_PASSWORD=minhasenha
+      - DB_DATABASE=postgres
+    depends_on: 
+      - db
+
+volumes: 
+  pgdata:
