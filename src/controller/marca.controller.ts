@@ -4,10 +4,9 @@ import { AppDataSource } from "../data-source";
 
 const MarcaRouter = Router();
 
-const MarcaRepo = AppDataSource.getRepository(Marca);
-
 MarcaRouter.get("/marca", async (req, res) => {
   try {
+      const MarcaRepo = AppDataSource.getRepository(Marca);
       const marcas = await MarcaRepo.find({
           relations: ['carros']
       });
@@ -23,21 +22,30 @@ MarcaRouter.post("/marca", async (req, res) => {
   try {
       const { nome } = req.body;
       
+      console.log("Dados recebidos para nova marca:", { nome });
       
-      // Verifica se já existe uma marca com o mesmo nome
+      const MarcaRepo = AppDataSource.getRepository(Marca);
+      
+      
       const marcaExistente = await MarcaRepo.findOne({
           where: { nome }
       });
       
       if (marcaExistente) {
+          console.log("Marca com nome duplicado encontrada:", marcaExistente);
           return res.status(409).json({ message: "Marca já existente." });
       }
 
-      const novaMarca = MarcaRepo.create({
-          nome
-      });
+      
+      const novaMarca = new Marca();
+      novaMarca.nome = nome;
+      
+      console.log("Nova marca criada (antes de salvar):", { nome: novaMarca.nome });
+      
       
       const marcaSalva = await MarcaRepo.save(novaMarca);
+      
+      console.log("Marca salva no banco:", { id: marcaSalva.id, nome: marcaSalva.nome });
       
       return res.status(201).json(marcaSalva);
   } catch (error) {

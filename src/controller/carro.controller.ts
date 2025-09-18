@@ -5,13 +5,11 @@ import { AppDataSource } from "../data-source";
 
 const carRouter = Router();
 
-const CarroRepo = AppDataSource.getRepository(Carro);
-const MarcaRepo = AppDataSource.getRepository(Marca);
-
 
 
 carRouter.get("/carro", async (req, res) => {
   try {
+    const CarroRepo = AppDataSource.getRepository(Carro);
     const carros = await CarroRepo.find({
          relations: ['marca']
       });
@@ -26,11 +24,19 @@ carRouter.get("/carro", async (req, res) => {
 carRouter.post("/carro", async (req, res) => {
   try {
     const { placa, ano, modelo, marcaId } = req.body;
+    
+    console.log("Dados recebidos:", { placa, ano, modelo, marcaId });
+    
+    // Criar instâncias frescas dos repositórios para cada requisição
+    const CarroRepo = AppDataSource.getRepository(Carro);
+    const MarcaRepo = AppDataSource.getRepository(Marca);
+    
     const carroComMesmaPlaca = await CarroRepo.findOne({
       where: {placa}
     });
 
     if (carroComMesmaPlaca) {
+        console.log("Carro com placa duplicada encontrado:", carroComMesmaPlaca);
         return res.status(409).json({ message: "Já existe um carro cadastrado com esta placa." });
     }
 
@@ -42,14 +48,32 @@ carRouter.post("/carro", async (req, res) => {
       return res.status(404).json({ message: "Marca não encontrada." });
     }
 
-    const novoCarro = CarroRepo.create({ 
-        placa,
-        ano,
-        modelo,
-        marca
+    // Criar uma nova instância do carro
+    const novoCarro = new Carro();
+    novoCarro.placa = placa;
+    novoCarro.ano = ano;
+    novoCarro.modelo = modelo;
+    novoCarro.marca = marca;
+    
+    console.log("Novo carro criado (antes de salvar):", {
+        placa: novoCarro.placa,
+        ano: novoCarro.ano,
+        modelo: novoCarro.modelo,
+        marcaId: novoCarro.marca.id,
+        marcaNome: novoCarro.marca.nome
     });
     
-    const carroSalvo = await CarroRepo.save(novoCarro)
+    // Usar save() para gerenciar relacionamentos corretamente
+    const carroSalvo = await CarroRepo.save(novoCarro);
+    
+    console.log("Carro salvo no banco:", {
+        id: carroSalvo.id,
+        placa: carroSalvo.placa,
+        ano: carroSalvo.ano,
+        modelo: carroSalvo.modelo,
+        marcaId: carroSalvo.marca.id,
+        marcaNome: carroSalvo.marca.nome
+    });
     
     return res.status(201).json(carroSalvo);
   } catch (error) {
@@ -64,6 +88,7 @@ carRouter.post("/carro", async (req, res) => {
 carRouter.get("/carro/:id", async (req, res) => {
   try {
   const{ id } = req.params;
+  const CarroRepo = AppDataSource.getRepository(Carro);
   const carro = await CarroRepo.findOne({
     where: { id },
     relations: [ 'marca' ]
@@ -87,6 +112,8 @@ carRouter.put("/carro/:id", async (req, res) => {
     const{ id } = req.params;
     const {placa, ano, modelo, marcaId } = req.body;
     
+    const CarroRepo = AppDataSource.getRepository(Carro);
+    const MarcaRepo = AppDataSource.getRepository(Marca);
     
     const carro = await CarroRepo.findOne({  
       where: { id },
@@ -128,6 +155,7 @@ carRouter.delete("/carro/:id", async (req, res) => {
   try {
     const { id } = req.params;
     
+    const CarroRepo = AppDataSource.getRepository(Carro);
     
     const carro = await CarroRepo.findOne({
         where: { id }
