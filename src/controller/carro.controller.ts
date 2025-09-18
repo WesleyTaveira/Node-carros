@@ -1,79 +1,148 @@
 import { Router } from "express";
-import {v4 as uuidV4} from "uuid";
 import { Carro } from "../model/Carro";
+import { Marca } from "../model/Marca";
+import { AppDataSource } from "../data-source";
 
 const carRouter = Router();
 
+const CarroRepo = AppDataSource.getRepository(Carro);
+const MarcaRepo = AppDataSource.getRepository(Marca);
 
-let carros: Carro[] = []
 
-carRouter.get("/carro", (req, res) => {
-    return res.status(200).json(carros);
+
+carRouter.get("/carro", async (req, res) => {
+  try {
+    const carros = await CarroRepo.find({
+         relations: ['marca']
+      });
+      return res.status(200).json(carros);
+    } catch (error) {
+      console.error("Erro ao buscar carros:", error);
+      return res.status(500).json({error: "Erro ao buscar carros"})
+    }
 })
 
 
-carRouter.post("/carro", (req, res) =>{
-    const { placa, ano, modelo, marca } = req.body;
-    const carroComMesmaPlaca = carros.find(carro => carro.placa === placa);
+carRouter.post("/carro", async (req, res) => {
+  try {
+    const { placa, ano, modelo, marcaId } = req.body;
+    const carroComMesmaPlaca = await CarroRepo.findOne({
+      where: {placa}
+    });
 
     if (carroComMesmaPlaca) {
         return res.status(409).json({ message: "Já existe um carro cadastrado com esta placa." });
     }
 
-    const novoCarro: Carro = {
-        id: uuidV4(),
+    const marca = await MarcaRepo.findOne({
+      where: {id: marcaId}
+    })
+
+    if (!marca) {
+      return res.status(404).json({ message: "Marca não encontrada." });
+    }
+
+    const novoCarro = CarroRepo.create({ 
         placa,
         ano,
         modelo,
         marca
-    };
+    });
     
-    carros.push(novoCarro);
+    const carroSalvo = await CarroRepo.save(novoCarro)
     
-    return res.status(201).json(novoCarro);
+    return res.status(201).json(carroSalvo);
+  } catch (error) {
+    console.error("Erro ao criar carro:", error);
+    return res.status(500).json({error: "Erro ao criar carro"})
+  }
+    
 });
 
 
 
-carRouter.get("/carro/:id", (req, res) => {
+carRouter.get("/carro/:id", async (req, res) => {
+  try {
   const{ id } = req.params;
-  const carro = carros.find(carro => carro.id === id)
+  const carro = await CarroRepo.findOne({
+    where: { id },
+    relations: [ 'marca' ]
+  });
 
-  if(!carro)
+  if(!carro) {
      return res.status(404).json({error: true, message: 'Carro não existente!'})
+  }
+
+  return res.status(200).json(carro)
+
+  } catch (error) {
+    console.error("Erro ao consultar carro:", error);
+    return res.status(500).json({error: "Erro ao consultar carro"})
+  } 
+}); 
+
+
+carRouter.put("/carro/:id", async (req, res) => {
+  try {
+    const{ id } = req.params;
+    const {placa, ano, modelo, marcaId } = req.body;
+    
+    
+    const carro = await CarroRepo.findOne({  
+      where: { id },
+      relations: [ 'marca' ]
+    });
   
-  return res.status(404).json(carro)
-}) 
+    if (!carro) {
+      return res.status(404).json({ error: true, message: 'Carro não existente!'});
+    }
 
+    if (marcaId) {
+      const marca = await MarcaRepo.findOne({
+        where: {id: marcaId}
+      });
+    
+      if (!marca) {
+        return res.status(404).json({ message: "Carro não encontrado." });
+    }
 
-carRouter.put("/carro/:id", (req, res) => {
-  const{ id } = req.params;
-  const {placa, ano, marca } = req.body;
-  const carro = carros.find(carro => carro.id === id)
+      carro.marca = marca;
+    }
 
-  if (!carro)
-    return res.status(404).json({ error: true, message: 'Carro não existente!'});
+    carro.placa = placa;
+    carro.ano = ano;
+    carro.modelo = modelo;
+    
+    const carroAtualizado = await CarroRepo.save(carro);
 
-  Object.assign(carro, {
-    placa,
-    ano,
-    marca,
+    return res.status(200).json(carroAtualizado);
+  } catch (error) {
+    console.error("Erro ao atualizar carro:", error);
+    return res.status(500).json({error: "Erro ao atualizar carro"})
 
-  })
+  }
 
-  return res.status(200).json(carro);
-}) 
-carRouter.delete("/carro/:id", (req, res) => {
-  const{ id } = req.params;
-  const carro = carros.find(carro => carro.id === id)
+});
+  
+carRouter.delete("/carro/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    
+    const carro = await CarroRepo.findOne({
+        where: { id }
+    });
 
-  if (!carro)
-    return res.status(404).json({ error: true, message: 'Carro não existente!'})
+    if (!carro) {
+        return res.status(404).json({ error: true, message: 'Carro não existente!' });
+    }
 
-  const novoCarro = carros.filter(carro => carro.id !== id)
-  carros = novoCarro;
-
-  return res.status(204).send();
+    await CarroRepo.remove(carro);
+    return res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao deletar carro:", error);
+    return res.status(500).json({ error: "Erro ao deletar carro" });
+  }
 }) 
 
 export default carRouter; 
