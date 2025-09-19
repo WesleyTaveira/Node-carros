@@ -9,6 +9,20 @@ AppDataSource.initialize()
 
         const app = express();
         
+        // Configurar middlewares antes das rotas
+        app.use(express.json());
+        
+        // Middleware para tratar erros de JSON malformado
+        app.use((error: any, req: any, res: any, next: any) => {
+            if (error instanceof SyntaxError && 'body' in error) {
+                return res.status(400).json({ 
+                    error: 'JSON malformado',
+                    message: 'Verifique se o JSON está correto'
+                });
+            }
+            next();
+        });
+        
         app.get("/", (req,res) => {
             const valor = req.query.valor;
             console.log("valor >>>",valor)
@@ -17,8 +31,6 @@ AppDataSource.initialize()
                 value: valor
             })
         })
-        
-        app.use(express.json());
         
         // Usa as rotas
         app.use(router);

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { Carro } from "../model/Carro";
 import { Marca } from "../model/Marca";
 import { AppDataSource } from "../data-source";
@@ -7,7 +7,7 @@ const carRouter = Router();
 
 
 
-carRouter.get("/carro", async (req, res) => {
+carRouter.get("/carro", async (req: Request, res: Response) => {
   try {
     const CarroRepo = AppDataSource.getRepository(Carro);
     const carros = await CarroRepo.find({
@@ -21,11 +21,26 @@ carRouter.get("/carro", async (req, res) => {
 })
 
 
-carRouter.post("/carro", async (req, res) => {
+carRouter.post("/carro", async (req: Request, res: Response) => {
   try {
-    const { placa, ano, modelo, marcaId } = req.body;
+    const { placa, ano, modelo, marca } = req.body;
     
-    console.log("Dados recebidos:", { placa, ano, modelo, marcaId });
+    console.log("Dados recebidos:", { placa, ano, modelo, marca });
+    
+    // Validações básicas
+    if (!placa || !ano || !modelo || !marca) {
+      return res.status(400).json({ 
+        error: "Dados obrigatórios não fornecidos",
+        message: "placa, ano, modelo e marca são obrigatórios"
+      });
+    }
+    
+    if (typeof ano !== 'number' || ano < 1900 || ano > new Date().getFullYear() + 1) {
+      return res.status(400).json({ 
+        error: "Ano inválido",
+        message: "O ano deve ser um número válido entre 1900 e " + (new Date().getFullYear() + 1)
+      });
+    }
     
     // Criar instâncias frescas dos repositórios para cada requisição
     const CarroRepo = AppDataSource.getRepository(Carro);
@@ -40,11 +55,11 @@ carRouter.post("/carro", async (req, res) => {
         return res.status(409).json({ message: "Já existe um carro cadastrado com esta placa." });
     }
 
-    const marca = await MarcaRepo.findOne({
-      where: {id: marcaId}
+    const marcaEncontrada = await MarcaRepo.findOne({
+      where: {id: marca}
     })
 
-    if (!marca) {
+    if (!marcaEncontrada) {
       return res.status(404).json({ message: "Marca não encontrada." });
     }
 
@@ -53,7 +68,7 @@ carRouter.post("/carro", async (req, res) => {
     novoCarro.placa = placa;
     novoCarro.ano = ano;
     novoCarro.modelo = modelo;
-    novoCarro.marca = marca;
+    novoCarro.marca = marcaEncontrada;
     
     console.log("Novo carro criado (antes de salvar):", {
         placa: novoCarro.placa,
@@ -78,16 +93,24 @@ carRouter.post("/carro", async (req, res) => {
     return res.status(201).json(carroSalvo);
   } catch (error) {
     console.error("Erro ao criar carro:", error);
-    return res.status(500).json({error: "Erro ao criar carro"})
+    return res.status(500).json({
+      error: "Erro ao criar carro",
+      details: error instanceof Error ? error.message : "Erro desconhecido"
+    })
   }
     
 });
 
 
 
-carRouter.get("/carro/:id", async (req, res) => {
+carRouter.get("/carro/:id", async (req: Request, res: Response) => {
   try {
   const{ id } = req.params;
+  
+  if (!id) {
+    return res.status(400).json({ error: true, message: 'ID é obrigatório!' });
+  }
+  
   const CarroRepo = AppDataSource.getRepository(Carro);
   const carro = await CarroRepo.findOne({
     where: { id },
@@ -107,10 +130,14 @@ carRouter.get("/carro/:id", async (req, res) => {
 }); 
 
 
-carRouter.put("/carro/:id", async (req, res) => {
+carRouter.put("/carro/:id", async (req: Request, res: Response) => {
   try {
     const{ id } = req.params;
     const {placa, ano, modelo, marcaId } = req.body;
+    
+    if (!id) {
+      return res.status(400).json({ error: true, message: 'ID é obrigatório!' });
+    }
     
     const CarroRepo = AppDataSource.getRepository(Carro);
     const MarcaRepo = AppDataSource.getRepository(Marca);
@@ -151,9 +178,13 @@ carRouter.put("/carro/:id", async (req, res) => {
 
 });
   
-carRouter.delete("/carro/:id", async (req, res) => {
+carRouter.delete("/carro/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({ error: true, message: 'ID é obrigatório!' });
+    }
     
     const CarroRepo = AppDataSource.getRepository(Carro);
     

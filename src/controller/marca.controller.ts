@@ -1,10 +1,10 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { Marca } from "../model/Marca";
 import { AppDataSource } from "../data-source";
 
 const MarcaRouter = Router();
 
-MarcaRouter.get("/marca", async (req, res) => {
+MarcaRouter.get("/marca", async (req: Request, res: Response) => {
   try {
       const MarcaRepo = AppDataSource.getRepository(Marca);
       const marcas = await MarcaRepo.find({
@@ -18,7 +18,7 @@ MarcaRouter.get("/marca", async (req, res) => {
 })
 
 
-MarcaRouter.post("/marca", async (req, res) => {
+MarcaRouter.post("/marca", async (req: Request, res: Response) => {
   try {
       const { nome } = req.body;
       
@@ -56,9 +56,14 @@ MarcaRouter.post("/marca", async (req, res) => {
 
 
 
-MarcaRouter.get("/marca/:id", async (req, res) => {
+MarcaRouter.get("/marca/:id", async (req: Request, res: Response) => {
 try {
   const { id } = req.params;
+  
+  if (!id) {
+    return res.status(400).json({ error: true, message: 'ID é obrigatório!' });
+  }
+  
   const MarcaRepo = AppDataSource.getRepository(Marca);
   
   const marca = await MarcaRepo.findOne({
@@ -78,10 +83,15 @@ try {
 }) 
 
 
-MarcaRouter.put("/marca/:id", async (req, res) => {
+MarcaRouter.put("/marca/:id", async (req: Request, res: Response) => {
 try {
   const { id } = req.params;
   const { nome } = req.body;
+  
+  if (!id) {
+    return res.status(400).json({ error: true, message: 'ID é obrigatório!' });
+  }
+  
   const MarcaRepo = AppDataSource.getRepository(Marca);
   
   const marca = await MarcaRepo.findOne({
@@ -102,9 +112,14 @@ try {
 }
 }) 
 
-MarcaRouter.delete("/marca/:id", async (req, res) => {
+MarcaRouter.delete("/marca/:id", async (req: Request, res: Response) => {
 try {
   const { id } = req.params;
+  
+  if (!id) {
+    return res.status(400).json({ error: true, message: 'ID é obrigatório!' });
+  }
+  
   const MarcaRepo = AppDataSource.getRepository(Marca);
   
   const marca = await MarcaRepo.findOne({

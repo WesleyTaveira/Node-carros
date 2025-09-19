@@ -9,7 +9,7 @@ export class Marca {
     @Column()
     nome!: string;
 
-    @OneToMany(() => Carro, (carro) => carro.marca)
+    @OneToMany(() => Carro, (carro: Carro) => carro.marca)
     carros!: Carro[];
 
     
